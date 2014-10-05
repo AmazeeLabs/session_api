@@ -15,13 +15,16 @@ function session_api_available() {
 }
 
 /**
+ * Implements hook_init().
  * Create an empty string cookie. This is useful for fooling the
  * session_api_available() function when using Pressflow, which does not set
  * a cookie for anonymous users.
  */
-function session_api_start_session() {
-  $_SESSION['session_api_session'] = '';
-  drupal_session_start();
+function session_api_init() {
+  // Set a cookie via JavaScript to check if anonymous users support cookies.
+  if (user_is_anonymous()) {
+    drupal_add_js("document.cookie = 'session_api_available=1; path=/';", array('type' => 'inline'));
+  }
 }
 
 /**
@@ -33,11 +36,6 @@ function session_api_start_session() {
  */
 function session_api_get_sid($create = TRUE) {
   static $sid;
-
-  if ($create) {
-    // Must initialize sessions for anonymous users.
-    session_api_start_session();
-  }
 
   if (!session_api_available()) {
     return FALSE;
